@@ -1,0 +1,21 @@
+# Personal overrides — never commit these
+starship-matyou.conf
+.config/fastfetch/logo.png
+.config/fastfetch/logo/
+
+# Secrets
+*id_rsa*
+*id_ed25519*
+*.key
+*.pem
+*.p12
+*.pgp
+.ssh/
+*kwallet*
+*wallet*
+.local/share/kwalletd/
+
+# Caches and logs
+*.log
+.cache/
+__pycache__/

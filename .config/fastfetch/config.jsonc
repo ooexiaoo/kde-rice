@@ -1,0 +1,194 @@
+{
+  "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+  "logo": {
+    "type": "kitty",
+    "source": "~/.config/fastfetch/logo.png",
+    "height": 18,
+    "padding": {
+      "top": 2,
+      "right": 1
+    },
+    },
+  "display": {
+    "separator": " ",
+    "color": {
+      "keys": "38;2;255;135;145",   // primary — starship-matyou.py replaces
+      "title": "38;2;123;231;168"    // tertiary — starship-matyou.py replaces
+    },
+    "brightColor": true,
+    "key": {
+      "width": 18
+    },
+    "bar": {
+      "width": 14,
+      "char": {
+        "elapsed": "█",
+        "total": "░"
+      }
+    },
+    "percent": {
+      "type": 3
+    }
+  },
+  "modules": [
+    // --- HEADER ---
+    {
+      "type": "custom",
+      "format": "╭─────────────── PC ─────────────────────",
+      "outputColor": "white"
+    },
+    {
+      "type": "title",
+      "key": " 󰟷 User",
+      "keyColor": "38;2;255;135;145",
+      "format": "{user-name}"
+    },
+    {
+      "type": "title",
+      "key": " 󰌢 Host",
+      "keyColor": "38;2;255;135;145",
+      "format": "{host-name}"
+    },
+
+    // --- SOFTWARE ---
+    {
+      "type": "custom",
+      "format": "├─────────────── Software ───────────────",
+      "outputColor": "white"
+    },
+    {
+      "type": "os",
+      "key": " 󰏤 OS",
+      "keyColor": "38;2;255;135;145"
+    },
+    {
+      "type": "kernel",
+      "key": " 󰌽 Kernel",
+      "keyColor": "38;2;255;135;145"
+    },
+    {
+      "type": "uptime",
+      "key": " 󰥔 Uptime",
+      "keyColor": "38;2;255;135;145"
+    },
+    {
+      "type": "packages",
+      "key": " 󰏖 Packages",
+      "keyColor": "38;2;255;135;145",
+      "format": "{rpm} (rpm)"
+    },
+    {
+      "type": "shell",
+      "key": " 󰟤 Shell",
+      "keyColor": "38;2;255;135;145"
+    },
+    {
+      "type": "de",
+      "key": " 󰍹 Desktop",
+      "keyColor": "38;2;255;135;145"
+    },
+    {
+      "type": "wm",
+      "key": " 󰖩 WM",
+      "keyColor": "38;2;255;135;145"
+    },
+    {
+      "type": "terminal",
+      "key": "  Terminal",
+      "keyColor": "38;2;255;135;145"
+    },
+
+    // --- HARDWARE ---
+    {
+      "type": "custom",
+      "format": "├─────────────── Hardware ───────────────",
+      "outputColor": "white"
+    },
+    {
+      "type": "cpu",
+      "key": " 󰻠 CPU",
+      "keyColor": "38;2;123;231;168",
+      "format": "{name} ({cores-physical}C/{cores-logical}T) @ {freq-max}"
+    },
+    {
+      "type": "gpu",
+      "key": " 󰢮 GPU",
+      "keyColor": "38;2;123;231;168"
+    },
+    {
+      "type": "memory",
+      "key": " 󰍛 RAM",
+      "keyColor": "38;2;123;231;168",
+      "format": "{used} / {total} ({percentage})"
+    },
+    {
+      "type": "swap",
+      "key": " 󰓡 Swap",
+      "keyColor": "38;2;123;231;168",
+      "format": "{used} / {total} ({percentage})"
+    },
+
+    // --- STORAGE ---
+    {
+      "type": "custom",
+      "format": "├─────────────── Storage ────────────────",
+      "outputColor": "white"
+    },
+    {
+      "type": "disk",
+      "key": " 󰋊 System",
+      "keyColor": "38;2;123;231;168",
+      "folders": "/",
+      "format": "{size-used} / {size-total} ({size-percentage}%) [{filesystem}] {size-percentage-bar}"
+    },
+
+    // --- MISC ---
+    {
+      "type": "custom",
+      "format": "├─────────────── Misc ──────────────────",
+      "outputColor": "white"
+    },
+    {
+      "type": "display",
+      "key": " 󰍹 Display",
+      "keyColor": "38;2;123;231;168"
+    },
+    {
+      "type": "localip",
+      "key": " 󰩟 Local IP",
+      "keyColor": "38;2;123;231;168",
+      "compact": true,
+      "showIpv4": true,
+      "showIpv6": false,
+      "defaultRouteOnly": true
+    },
+
+    // --- FOOTER ---
+    {
+      "type": "custom",
+      "format": "├─────────────── Customization ──────────",
+      "outputColor": "white"
+    },
+    {
+      "type": "cursor",
+      "key": " 󰇀 Cursor",
+      "keyColor": "38;2;123;231;168"
+    },
+    {
+      "type": "terminalfont",
+      "key": " 󰛖 Font",
+      "keyColor": "38;2;123;231;168"
+    },
+    {
+      "type": "colors",
+      "key": " 󰸱 Palette",
+      "keyColor": "38;2;123;231;168",
+      "symbol": "circle"
+    },
+    {
+      "type": "custom",
+      "format": "╰──────────────────────────────",
+      "outputColor": "white"
+    }
+  ]
+}

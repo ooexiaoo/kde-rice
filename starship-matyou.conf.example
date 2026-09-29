@@ -1,0 +1,13 @@
+# Optional targets for starship-matyou.py
+#
+# Copy to ~/.config/starship-matyou.conf and uncomment what you use.
+# Anything left empty is simply skipped, so this file is safe to keep minimal.
+
+[sync]
+# Obsidian vault whose accent color should follow the wallpaper.
+# The script writes into <vault>/.obsidian/appearance.json
+#obsidian_vault = ~/Notes/MyVault
+
+# Chromium-family managed policy dir. Brave watches this file live and
+# re-themes itself without a restart. Writing here needs root.
+#brave_policy_dir = /etc/brave/policies/managed

@@ -1,0 +1,42 @@
+[1d44154d-2b42-4ee8-b8fa-9398ecc41e29]
+Description=Application settings for systemsettings
+noborder=false
+noborderrule=2
+wmclass=systemsettings
+wmclassmatch=1
+
+[3eb922fa-4f99-4a6d-be20-17501d8b66a4]
+Description=Application settings for com.github.ryonakano.reco
+noborder=true
+noborderrule=2
+wmclass=\scom.github.ryonakano.reco
+wmclasscomplete=true
+wmclassmatch=1
+
+[8c2669cd-8968-4f1b-9419-ef9894bac4c8]
+Description=Application settings for obsidian
+noborder=false
+noborderrule=2
+wmclass=md.obsidian.obsidian
+wmclasscomplete=true
+wmclassmatch=1
+
+[8d423b86-ac52-492f-829b-4a9549751e9f]
+Description=Application settings for org.kde.dolphin
+noborder=false
+noborderrule=2
+wmclass=dolphin org.kde.dolphin
+wmclasscomplete=true
+wmclassmatch=1
+
+[General]
+count=5
+rules=3eb922fa-4f99-4a6d-be20-17501d8b66a4,8d423b86-ac52-492f-829b-4a9549751e9f,1d44154d-2b42-4ee8-b8fa-9398ecc41e29,c012c496-0237-40ef-ad2b-3cc2f6af70a3,8c2669cd-8968-4f1b-9419-ef9894bac4c8
+
+[c012c496-0237-40ef-ad2b-3cc2f6af70a3]
+Description=Application settings for org.kde.konsole
+noborder=false
+noborderrule=2
+wmclass=konsole org.kde.konsole
+wmclasscomplete=true
+wmclassmatch=1
