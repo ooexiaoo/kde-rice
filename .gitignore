@@ -1,7 +1,9 @@
 # Personal overrides — never commit these
 starship-matyou.conf
-.config/fastfetch/logo.png
+
+# Replace these with your own; the shipped logo.png is tracked
 .config/fastfetch/logo/
+.config/fastfetch/logo.ascii
 
 # Secrets
 *id_rsa*

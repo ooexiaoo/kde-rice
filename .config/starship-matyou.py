@@ -3,6 +3,9 @@
 starship-matyou — syncs Material You wallpaper colors to everything else.
 
 Reads the active KDE Material You color scheme and rewrites:
+  - <scheme>.colors                        ([Colors:Highlight] for the panel)
+  - ~/.config/plasma-org.kde.plasma.desktop-appletsrc
+                                           (Panel Colorizer widget text)
   - ~/.config/starship.toml              (palette 'material_you')
   - ~/.config/fastfetch/config.jsonc      (key + title text colors)
   - <obsidian vault>/.obsidian/appearance.json  (accentColor)
@@ -15,7 +18,7 @@ Obsidian and Brave are opt-in: set them in ~/.config/starship-matyou.conf
     [sync]
     obsidian_vault = ~/Notes/MyVault
     brave_policy_dir = /etc/brave/policies/managed
-
+    widget_text = auto          # auto | dark | light
 A target with no configured path is skipped. Every path can also be overridden
 per-invocation with the equivalent environment variable.
 """
@@ -50,7 +53,13 @@ def load_settings() -> dict:
     defaults = {
         "obsidian_vault": "",
         "brave_policy_dir": "/etc/brave/policies/managed",
+        "panel_appletsrc": str(
+            Path.home() / ".config" / "plasma-org.kde.plasma.desktop-appletsrc"
+        ),
+        "widget_text": "auto",
     }
+    # Keys that are plain values rather than filesystem paths.
+    plain = {"widget_text"}
 
     conf = configparser.RawConfigParser()
     if SELF_CONF.exists():
@@ -61,7 +70,10 @@ def load_settings() -> dict:
         value = os.environ.get(key.upper(), None)
         if value is None:
             value = conf.get("sync", key, fallback=fallback) if conf.has_section("sync") else fallback
-        resolved[key] = _expand(value) if value else None
+        if key in plain:
+            resolved[key] = value or fallback
+        else:
+            resolved[key] = _expand(value) if value else None
 
     return resolved
 
@@ -196,12 +208,12 @@ def build_highlight_group(p: dict) -> dict:
 
     The generated Material You scheme has no [Colors:Highlight] group, so the
     panel falls back to the base theme's highlight and keeps white text on it.
-    On a pale wallpaper primary that is unreadable. Derive the panel background
-    from the wallpaper instead, then pick the text by WCAG contrast so it stays
-    legible whatever the wallpaper does.
+    On a pale wallpaper primary that is unreadable. Derive both ends from the
+    wallpaper instead, and pair the background with the same text Panel Colorizer
+    is given, so the group and the widget config never disagree.
     """
-    bg = p["primary"]
-    fg = readable_text_on(bg)
+    bg = panel_background(p)
+    fg = panel_text_color(p, bg)
     return {
         "BackgroundNormal": bg,
         "BackgroundAlternate": blend(bg, fg, 0.10),
@@ -247,6 +259,162 @@ def write_highlight_group(path: Path, colors: dict) -> bool:
         f"[starship-matyou] panel highlight set — bg {colors['BackgroundNormal']} "
         f"on text {colors['ForegroundNormal']} "
         f"(contrast {contrast_ratio(colors['ForegroundNormal'], colors['BackgroundNormal']):.1f}:1)"
+    )
+    return True
+
+
+# ---------------------------------------------------------------------------
+# Panel Colorizer
+# ---------------------------------------------------------------------------
+
+
+# How far the wallpaper hue is carried into the panel text, and into the panel
+# background. Both keep only a trace of the hue so the result reads as clean
+# near-white / near-black rather than a washed-out version of the wallpaper.
+PANEL_TEXT_TINT = 0.90
+PANEL_TEXT_DARK_TINT = 0.92
+# The panel background is aimed at AAA rather than AA. Landing exactly on the
+# 4.5:1 line leaves no headroom for the widget style's own text, which sits on
+# this same surface and is not under our control.
+PANEL_BG_CONTRAST = 7.0
+
+
+def darken_tint(hex_color: str, against: list[str], min_ratio: float) -> str:
+    """Darken hex_color, muting it in proportion to how far it had to go, until
+    it clears min_ratio against every color in against.
+
+    Muting per step is wrong in both directions. A pale wallpaper needs many steps
+    to reach the target, so a per-step mute compounds and lands on flat grey —
+    and the tint is the entire point. A saturated wallpaper that is already dark
+    needs no steps at all and should keep its chroma. So the mute is applied once
+    at the end, scaled by the total darkening, which makes the result consistent
+    no matter how many steps a given color happened to need.
+    """
+    h0, s0, l0 = hex_to_hsl(hex_color)
+    result = hex_color
+    for _ in range(40):
+        if all(contrast_ratio(result, other) >= min_ratio for other in against):
+            break
+        h, s, l = hex_to_hsl(result)
+        result = hsl_to_hex(h, s, max(0.03, l - 0.03))
+
+    h, s, l = hex_to_hsl(result)
+    ratio = l / l0 if l0 else 1.0
+    h, s = h, min(s, s0 * (0.35 + 0.65 * ratio))
+    # Muting toward grey raises luminance, which can drop the contrast back under
+    # the target. Keep darkening the muted color rather than falling back to the
+    # unmuted one, which would defeat the point of muting it in the first place.
+    l = max(0.03, l)
+    for _ in range(20):
+        candidate = hsl_to_hex(h, s, l)
+        if all(contrast_ratio(candidate, other) >= min_ratio for other in against):
+            return candidate
+        l = max(0.03, l - 0.03)
+    return hsl_to_hex(h, s, l)
+
+
+def panel_background(p: dict) -> str:
+    """Wallpaper-tinted panel background, normalized to the dark end.
+
+    Panel Colorizer sets the panel background from the highlight color but never
+    recolors the panel's own text (CustomBackground.qml returns early for
+    `isPanel`), so that text stays whatever the Plasma widget style draws — a
+    near-white. A light background therefore cannot be made legible at all.
+
+    It also reverts items to the style color when window focus changes, without
+    re-applying, which on a light panel is a visible flash between two very
+    different colors. Darkening the panel makes the widget's color and the
+    style's fallback agree, so the flash is invisible. The wallpaper hue
+    survives, just at the dark end.
+    """
+    text = blend(p["primary"], "#ffffff", PANEL_TEXT_TINT)
+    return darken_tint(p["primary"], [text], PANEL_BG_CONTRAST)
+
+
+def panel_text_color(p: dict, bg: str) -> str:
+    """Panel text: a light tint of the wallpaper hue, checked against bg.
+
+    The panel is dark by construction, so light text is the default. `dark` is
+    kept for anyone who has overridden the panel background to something light.
+    """
+    mode = str(SETTINGS.get("widget_text") or "auto").strip().lower()
+    if mode == "dark":
+        tint = blend(p["primary"], "#000000", PANEL_TEXT_DARK_TINT)
+        return tint if contrast_ratio(tint, bg) >= MIN_CONTRAST else readable_text_on(bg)
+
+    tint = blend(p["primary"], "#ffffff", PANEL_TEXT_TINT)
+    if contrast_ratio(tint, bg) >= MIN_CONTRAST:
+        return tint
+    return readable_text_on(bg)
+
+
+# KConfig section headers are written as [Containments][38][Applets][104]
+# [Configuration][General]; splitting on the outer brackets leaves the name
+# without its trailing "]", so match the suffix accordingly.
+APPLET_GENERAL_SECTION = "[Configuration][General"
+
+
+def update_panel_colorizer(p: dict) -> bool:
+    """Write an explicit wallpaper text color into Panel Colorizer's widget config.
+
+    By default Panel Colorizer draws widget text from `highlightedTextColor`, a
+    palette lookup. That is the wrong shape here: the panel, the task manager and
+    the application menu popup are different surfaces with different backgrounds,
+    and one shared palette entry cannot be legible on all of them. Assigning the
+    color directly (`sourceType` 0 = custom) decouples the text from the
+    palette, so each surface can be given a tone that actually contrasts.
+    """
+    path = SETTINGS.get("panel_appletsrc")
+    if not path or not path.exists():
+        print(f"[starship-matyou] no panel appletsrc at {path}, skipping")
+        return False
+
+    bg = panel_background(p)
+    fg = panel_text_color(p, bg)
+    raw = path.read_text()
+    section = None
+    out = []
+    touched = 0
+
+    for line in raw.splitlines():
+        header = re.match(r"^\[(.+)\]$", line)
+        if header:
+            section = header.group(1)
+        if (
+            section
+            and section.endswith(APPLET_GENERAL_SECTION)
+            and line.startswith("globalSettings=")
+        ):
+            try:
+                cfg = json.loads(line[len("globalSettings="):])
+            except json.JSONDecodeError:
+                out.append(line)
+                continue
+            normal = cfg.get("widgets", {}).get("normal")
+            if isinstance(normal, dict):
+                color = normal.setdefault("foregroundColor", {})
+                desired = {
+                    "enabled": True,
+                    "sourceType": 0,
+                    "custom": fg,
+                    "alpha": 1,
+                    "saturationEnabled": False,
+                    "lightnessEnabled": False,
+                }
+                if any(color.get(k) != v for k, v in desired.items()):
+                    color.update(desired)
+                    touched += 1
+                    line = "globalSettings=" + json.dumps(cfg, separators=(",", ":"))
+        out.append(line)
+
+    if not touched:
+        print(f"[starship-matyou] panel widget text already {fg}")
+        return False
+
+    path.write_text("\n".join(out) + ("\n" if raw.endswith("\n") else ""))
+    print(
+        f"[starship-matyou] panel widget text -> {fg} "
+        f"(wallpaper-derived, {contrast_ratio(fg, bg):.1f}:1 on panel {bg})"
     )
     return True
 
@@ -809,6 +977,7 @@ def main():
     print(f"  onSurface:  {matyou['onSurface']}")
 
     write_highlight_group(scheme_path, build_highlight_group(matyou))
+    update_panel_colorizer(matyou)
     update_starship(palette)
     update_fastfetch(palette)
     update_obsidian(palette)

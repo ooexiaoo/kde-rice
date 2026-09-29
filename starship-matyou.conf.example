@@ -11,3 +11,13 @@
 # Chromium-family managed policy dir. Brave watches this file live and
 # re-themes itself without a restart. Writing here needs root.
 #brave_policy_dir = /etc/brave/policies/managed
+
+# Panel text direction. The panel background is derived from the wallpaper and
+# is always dark, so text is light by default and keeps a hint of the wallpaper
+# hue. You only need this if you have overridden the panel background yourself.
+#   auto / light - light text (default)
+#   dark         - dark text, for a light panel background
+#widget_text = auto
+
+# Plasma's panel layout, if it is not in the default location.
+#panel_appletsrc = ~/.config/plasma-org.kde.plasma.desktop-appletsrc

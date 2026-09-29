@@ -65,7 +65,6 @@ DialogWidth=810
 
 [Containments][38][Applets][135][Configuration][General]
 hideInFitContent=true
-screenWidth=1920
 
 [Containments][38][Applets][136]
 immutability=1
@@ -280,7 +279,3 @@ DialogWidth=810
 
 [Containments][38][General]
 AppletOrder=143;136;59;135;5;81;104;82;63
-
-[ScreenMapping]
-itemsOnDisabledScreens=0,,1,desktop:/New Folder
-screenMapping=desktop:/New Folder,0,
