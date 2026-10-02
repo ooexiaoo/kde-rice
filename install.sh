@@ -28,6 +28,11 @@ done
 PLASMOID_DIR="$HOME/.local/share/plasma/plasmoids"
 AURORAE_DIR="$HOME/.local/share/aurorae/themes"
 
+# Installed from the fork, not PyPI: it carries the UltraVibrant scheme and the
+# memoized HCT solver. Installing from PyPI makes every `pipx upgrade` silently
+# drop those, because the venv is rebuilt from the upstream wheel.
+KDE_MYOU_SRC="git+https://github.com/ooexiaoo/kde-material-you-colors.git"
+
 bold()  { printf '\033[1m%s\033[0m\n' "$*"; }
 info()  { printf '  %s\n' "$*"; }
 fail()  { printf '\033[31merror:\033[0m %s\n' "$*" >&2; exit 1; }
@@ -87,10 +92,11 @@ install_deps() {
   fi
 
   if ! command -v kde-material-you-colors >/dev/null; then
-    info "installing kde-material-you-colors (the color backend)"
-    pipx install kde-material-you-colors
+    info "installing kde-material-you-colors (the color backend, from the fork)"
+    pipx install "$KDE_MYOU_SRC"
   else
     info "kde-material-you-colors already installed"
+    info "to pull fork updates: pipx upgrade kde-material-you-colors"
   fi
 
   local missing=()
@@ -221,9 +227,11 @@ cat <<'EOF'
 Next steps
 ----------
   1. Install the color backend and the Material You widget:
-       pipx install kde-material-you-colors
+       pipx install git+https://github.com/ooexiaoo/kde-material-you-colors.git
      then add "KDE Material You Colors" to your panel via
      System Settings, or the KDE Store (https://store.kde.org/p/2136963).
+     Upgrade it with `pipx upgrade kde-material-you-colors` -- it tracks the
+     fork, so the local patches survive.
 
   2. Set a wallpaper. The shipped appletsrc intentionally has no wallpaper
      path, so Plasma keeps whatever you already had. Changing it is what
