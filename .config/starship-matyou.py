@@ -211,8 +211,17 @@ def build_highlight_group(p: dict) -> dict:
     On a pale wallpaper primary that is unreadable. Derive both ends from the
     wallpaper instead, and pair the background with the same text Panel Colorizer
     is given, so the group and the widget config never disagree.
+
+    The panel background is `p["primary"]` (Colors:Selection/BackgroundNormal),
+    which is what Panel Colorizer's "highlightColor" resolves to. Do not
+    substitute panel_background() here: that darkens the primary on the
+    assumption the panel is dark, but the panel actually renders p["primary"]
+    as-is. Deriving the text from the darkened value picks a light tint, and
+    that light tint is what Theme.highlightedTextColor returns -- which is how
+    the Global Menu ends up drawing near-white text on a pale panel as soon as
+    it takes focus.
     """
-    bg = panel_background(p)
+    bg = p["primary"]
     fg = panel_text_color(p, bg)
     return {
         "BackgroundNormal": bg,
@@ -369,7 +378,7 @@ def update_panel_colorizer(p: dict) -> bool:
         print(f"[starship-matyou] no panel appletsrc at {path}, skipping")
         return False
 
-    bg = panel_background(p)
+    bg = p["primary"]
     fg = panel_text_color(p, bg)
     raw = path.read_text()
     section = None
