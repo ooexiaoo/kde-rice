@@ -27,6 +27,7 @@ import configparser
 import json
 import os
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -269,6 +270,34 @@ def write_highlight_group(path: Path, colors: dict) -> bool:
         f"on text {colors['ForegroundNormal']} "
         f"(contrast {contrast_ratio(colors['ForegroundNormal'], colors['BackgroundNormal']):.1f}:1)"
     )
+    return True
+
+
+def reload_color_scheme(path: Path) -> bool:
+    """Re-apply the scheme so Plasma picks up the group we just rewrote.
+
+    kde-material-you-colors applies the color scheme at apply_themes.py:48 and
+    only then runs this hook, at line 112. Plasma has therefore already read and
+    cached the .colors file by the time write_highlight_group() edits it, so the
+    corrected [Colors:Highlight] values land on disk but not in the running
+    session. Re-apply to close that gap.
+
+    Order matters in both directions here: the hook cannot run before
+    apply_color_schemes, because it locates the active scheme through kdeglobals
+    and that key is only written by the apply step.
+    """
+    name = path.stem
+    try:
+        subprocess.run(
+            ["plasma-apply-colorscheme", name],
+            check=True,
+            capture_output=True,
+            timeout=30,
+        )
+    except (subprocess.SubprocessError, OSError) as e:
+        print(f"[starship-matyou] scheme reload failed: {e}", file=sys.stderr)
+        return False
+    print(f"[starship-matyou] re-applied {name} to pick up the highlight group")
     return True
 
 
@@ -985,7 +1014,8 @@ def main():
     print(f"  surface:    {matyou['surfaceDim']}")
     print(f"  onSurface:  {matyou['onSurface']}")
 
-    write_highlight_group(scheme_path, build_highlight_group(matyou))
+    if write_highlight_group(scheme_path, build_highlight_group(matyou)):
+        reload_color_scheme(scheme_path)
     update_panel_colorizer(matyou)
     update_starship(palette)
     update_fastfetch(palette)
